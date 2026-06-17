@@ -1,0 +1,20 @@
+services:
+  glances:
+    image: nicolargo/glances:4.5.5-full
+    container_name: glances
+    restart: unless-stopped
+    pid: host
+    ports:
+      - "61208:61208"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/os-release:/etc/os-release:ro
+    environment:
+      - GLANCES_OPT=-w
+      - TZ=Europe/Madrid
+    networks:
+      - monitoring-net
+
+networks:
+  monitoring-net:
+    driver: bridge

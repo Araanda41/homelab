@@ -1,0 +1,51 @@
+services:
+  gitea:
+    image: gitea/gitea:1.22
+    container_name: gitea
+    restart: unless-stopped
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__server__DOMAIN=git.${DOMAIN}
+      - GITEA__server__ROOT_URL=https://git.${DOMAIN}/
+      - GITEA__server__SSH_DOMAIN=git.${DOMAIN}
+      - GITEA__server__SSH_PORT=2223
+      - TZ=Europe/Madrid
+    volumes:
+      - ${SERVICES_DIR}/git/data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3030:3000"
+      - "2223:22"
+    networks:
+      - git-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/api/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  runner:
+    image: gitea/act_runner:latest
+    container_name: gitea-runner
+    restart: unless-stopped
+    depends_on:
+      - gitea
+    environment:
+      - GITEA_INSTANCE_URL=http://gitea:3000
+      - GITEA_RUNNER_REGISTRATION_TOKEN=${GITEA_RUNNER_TOKEN}
+      - GITEA_RUNNER_NAME=${GITEA_RUNNER_NAME}
+      - TZ=Europe/Madrid
+      - CONFIG_FILE=/data/config.yaml
+    volumes:
+      - ${SERVICES_DIR}/git/runner-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - git-net
+
+networks:
+  git-net:
+    driver: bridge

@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.key
+*.pem
+id_*
+secrets/
+data/
+config/
+vw-data/
+caddy/data/
+caddy/config/
+runner-data/
+*.log

@@ -1,0 +1,17 @@
+services:
+  crafty:
+    image: registry.gitlab.com/crafty-controller/crafty-4:4.10.4
+    container_name: crafty
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Madrid
+    ports:
+      - "8443:8443"
+      - "25565-25570:25565-25570"
+      - "8100:8100"
+    volumes:
+      - ${CRAFTY_ROOT}/backups:/crafty/backups
+      - ${CRAFTY_ROOT}/logs:/crafty/logs
+      - ${CRAFTY_ROOT}/servers:/crafty/servers
+      - ${CRAFTY_ROOT}/config:/crafty/app/config
+      - ${CRAFTY_ROOT}/import:/crafty/import

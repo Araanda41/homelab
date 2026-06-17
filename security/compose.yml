@@ -1,0 +1,18 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:1.36.0
+    container_name: vaultwarden
+    restart: unless-stopped
+    ports:
+      - "8222:80"
+    volumes:
+      - ./vw-data:/data
+    environment:
+      - DOMAIN=https://vault.${DOMAIN}
+      - SIGNUPS_ALLOWED=false
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/alive >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

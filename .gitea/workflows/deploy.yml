@@ -1,0 +1,42 @@
+name: Deploy homelab
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.PI_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H "${{ secrets.HP_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy to Pi
+        run: |
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.PI_HOST }}" '
+            cd ~/services &&
+            git pull origin main &&
+            for s in core security git; do
+              docker compose -f "$s/compose.yml" up -d
+            done
+          '
+
+      - name: Deploy to HP
+        run: |
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.HP_HOST }}" '
+            cd ~/services &&
+            git pull origin main &&
+            for s in media storage games/crafty monitoring; do
+              docker compose -f "$s/compose.yml" up -d
+            done
+          '
