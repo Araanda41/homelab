@@ -33,6 +33,10 @@ that either. What started as one small board ended up as a two-node setup.
 > This repository contains sanitized versions with all secrets,
 > IP addresses and domain names replaced by environment variables.
 
+Container images use explicit version tags instead of floating tags such as
+`latest` or `stable`. Stateful major upgrades are reviewed separately before
+the pinned version is changed.
+
 <br>
 
 ## Architecture
@@ -109,9 +113,16 @@ The Pi runs at ~5 W and handles all the core services of the homelab. The HP Pro
 
 All configuration lives in a single `services` repository, mirrored from Gitea to GitHub on every push. Deployments are fully automated, no manual SSH required for routine updates.
 
-![CI/CD pipeline](diagrams/cicd-flow.png)
+```mermaid
+flowchart LR
+    A[Push to main] --> B[Gitea Actions runner]
+    B --> C[CI: validate Bash and Compose]
+    C -->|Pass| D[CD: deploy Pi stacks]
+    C -->|Pass| E[CD: deploy HP stacks]
+    C -->|Fail| F[Stop deployment]
+```
 
-The runner lives on the Pi inside the `git` Docker network. On push to `main`, it SSHes into both nodes and runs `docker compose up -d` for each stack. Because Compose is idempotent, only containers with changed configuration restart, everything else keeps running without interruption.
+The runner lives on the Pi inside the `git` Docker network. On push to `main`, it SSHes into both nodes and first checks the Bash script syntax with `bash -n` and every active stack with `docker compose config -q`. Any failed check stops the workflow before deployment. Only after CI passes does the CD phase run `docker compose up -d` on both nodes. Because Compose is idempotent, only containers with changed configuration restart; everything else keeps running without interruption.
 
 Secrets (SSH deploy key, host addresses) are stored in Gitea's repository secret store, never in the repository itself.
 

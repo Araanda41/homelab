@@ -1,6 +1,6 @@
 services:
   nextcloud:
-    image: nextcloud:34-apache
+    image: nextcloud:34.0.0-apache
     container_name: nextcloud
     environment:
       - TZ=Europe/Madrid
@@ -33,7 +33,7 @@ services:
         condition: service_healthy
 
   nextcloud-db:
-    image: postgres:16-alpine
+    image: postgres:16.14-alpine3.23
     container_name: nextcloud-db
     environment:
       POSTGRES_PASSWORD: "${NEXTCLOUD_DB_PASSWORD}"
@@ -100,7 +100,7 @@ services:
       - storage-net
 
   immich-redis:
-    image: redis:6.2-alpine
+    image: redis:6.2.22-alpine3.21
     container_name: immich-redis
     restart: unless-stopped
     healthcheck:

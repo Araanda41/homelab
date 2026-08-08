@@ -1,4 +1,4 @@
-name: Deploy homelab
+name: Homelab CI/CD
 
 on:
   push:
@@ -21,21 +21,49 @@ jobs:
           ssh-keyscan -H "${{ secrets.PI_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
           ssh-keyscan -H "${{ secrets.HP_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Deploy to Pi
+      - name: CI - Validate configurations
         run: |
           ssh "${{ secrets.SSH_USER }}@${{ secrets.PI_HOST }}" '
-            cd ~/services &&
-            git pull origin main &&
+            set -e
+            cd ~/services
+            git pull --ff-only origin main
+
+            bash -n scripts/monitor-recursos.sh
+
             for s in core security git; do
+              echo "Validating $s"
+              docker compose -f "$s/compose.yml" config -q
+            done
+          '
+
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.HP_HOST }}" '
+            set -e
+            cd ~/services
+            git pull --ff-only origin main
+
+            for s in media storage games/crafty monitoring; do
+              echo "Validating $s"
+              docker compose -f "$s/compose.yml" config -q
+            done
+          '
+
+      - name: CD - Deploy to Pi
+        run: |
+          ssh "${{ secrets.SSH_USER }}@${{ secrets.PI_HOST }}" '
+            set -e
+            cd ~/services
+
+            for s in core security; do
               docker compose -f "$s/compose.yml" up -d
             done
           '
 
-      - name: Deploy to HP
+      - name: CD - Deploy to HP
         run: |
           ssh "${{ secrets.SSH_USER }}@${{ secrets.HP_HOST }}" '
-            cd ~/services &&
-            git pull origin main &&
+            set -e
+            cd ~/services
+
             for s in media storage games/crafty monitoring; do
               docker compose -f "$s/compose.yml" up -d
             done

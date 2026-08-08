@@ -1,7 +1,7 @@
 services:
   homeassistant:
     container_name: homeassistant
-    image: ghcr.io/home-assistant/home-assistant:stable
+    image: ghcr.io/home-assistant/home-assistant:2026.6.3
     volumes:
       - ${SERVICES_DIR}/core/homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
@@ -11,7 +11,7 @@ services:
 
   cloudflared:
     container_name: cloudflared
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:2026.6.0
     restart: unless-stopped
     command: tunnel run
     environment:
@@ -64,7 +64,7 @@ services:
       start_period: 60s
 
   wg-easy:
-    image: ghcr.io/wg-easy/wg-easy:15
+    image: ghcr.io/wg-easy/wg-easy:15.3.0
     container_name: wg-easy
     volumes:
       - ./wireguard:/etc/wireguard
@@ -86,7 +86,7 @@ services:
 
   portainer:
     container_name: portainer
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ce:2.39.3
     restart: unless-stopped
     ports:
       - "9000:9000"
@@ -99,7 +99,7 @@ services:
 
   homarr:
     container_name: homarr
-    image: ghcr.io/homarr-labs/homarr:latest
+    image: ghcr.io/homarr-labs/homarr:v1.65.0
     restart: unless-stopped
     ports:
       - "7575:7575"
@@ -127,7 +127,7 @@ services:
       - core-net
 
   uptime-kuma:
-    image: louislam/uptime-kuma:1
+    image: louislam/uptime-kuma:1.23.17
     container_name: uptime-kuma
     restart: unless-stopped
     ports:
@@ -141,7 +141,7 @@ services:
 
   cloudflare-ddns:
     container_name: cloudflare-ddns
-    image: favonia/cloudflare-ddns:latest
+    image: favonia/cloudflare-ddns:1.16.2
     restart: unless-stopped
     network_mode: host
     environment:
